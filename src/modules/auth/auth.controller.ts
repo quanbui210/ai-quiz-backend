@@ -1,16 +1,21 @@
 import { Request, Response } from "express";
 import { supabase } from "../../utils/supabase";
+import prisma from "../../utils/prisma";
 
 export const loginWithGoogle = async (req: Request, res: Response) => {
   try {
     const { redirectTo } = req.query;
+    const backendUrl = process.env.BACKEND_URL || "http://localhost:3000";
     const redirectUrl =
-      (redirectTo as string) || `${process.env.SUPABASE_URL}/auth/v1/callback`;
+      (redirectTo as string) || `${backendUrl}/callback.html`;
+
+    console.log("Initiating Google OAuth with redirectTo:", redirectUrl);
 
     const { data, error } = await supabase.auth.signInWithOAuth({
       provider: "google",
       options: {
         redirectTo: redirectUrl,
+        skipBrowserRedirect: false, 
         queryParams: {
           access_type: "offline",
           prompt: "consent",
@@ -18,43 +23,94 @@ export const loginWithGoogle = async (req: Request, res: Response) => {
       },
     });
 
-    if (error) {
-      return res.status(400).json({ error: error.message });
+    console.log("OAuth response:", { data, error });
+
+    if (error 
+      || !data?.url
+    ) {
+      return res.status(400).json({ error: error?.message as string || "No redirect URL received" || "OAuth error" });
     }
+
+   
 
     return res.json({
       url: data.url,
       message: "Redirect user to this URL to complete Google login",
     });
   } catch (error) {
-    console.error("Google login error:", error);
     return res.status(500).json({ error: "Failed to initiate Google login" });
   }
 };
 
 export const handleCallback = async (req: Request, res: Response) => {
   try {
-    const { code } = req.query;
+  
+    if (req.method === "POST" && req.body.access_token) {
+      const { access_token, refresh_token, expires_at } = req.body;
 
-    if (!code) {
-      return res.status(400).json({ error: "Missing authorization code" });
+      const { data: sessionData, error: sessionError } =
+        await supabase.auth.setSession({
+          access_token,
+          refresh_token: refresh_token || "",
+        });
+
+      if (sessionError) {
+        return res.status(400).json({ error: sessionError.message });
+      }
+
+      const user = await prisma.user.findUnique({
+        where: {
+          email: sessionData?.user?.email,
+        },
+      });
+
+      if (!user) {
+        await prisma.user.create({
+          data: {
+            email: sessionData?.user?.email as string,
+            name: sessionData?.user?.user_metadata?.name as string,
+            avatarUrl: sessionData?.user?.user_metadata?.avatar_url as string,
+            createdAt: new Date(),
+            updatedAt: new Date(),
+          },
+        });
+      }
+
+      return res.json({
+        message: "Authentication successful, user created",
+        user: sessionData.user,
+        session: sessionData.session,
+      });
     }
 
-    const { data, error } = await supabase.auth.exchangeCodeForSession(
-      code as string,
-    );
+    const { code, access_token, error: oauthError } = req.query;
 
-    if (error) {
-      return res.status(400).json({ error: error.message });
+    if (oauthError) {
+      return res.status(400).json({ error: oauthError as string });
     }
 
-    return res.json({
-      message: "Authentication successful",
-      user: data.user,
-      session: data.session,
+    if (code) {
+      const { data, error } = await supabase.auth.exchangeCodeForSession(
+        code as string,
+      );
+
+
+      if (error) {
+        return res.status(400).json({ error: error.message });
+      }
+
+      return res.json({
+        message: "Authentication successful",
+        user: data.user,
+        session: data.session,
+      });
+    }
+
+    return res.status(400).json({
+      error: "Missing authorization code or token",
+      message: "Expected POST request with tokens or GET with code parameter",
     });
   } catch (error) {
-    console.error("Callback error:", error);
     return res.status(500).json({ error: "Failed to handle OAuth callback" });
   }
 };
@@ -63,20 +119,17 @@ export const getSession = async (req: Request, res: Response) => {
   try {
     const { data, error } = await supabase.auth.getSession();
 
-    if (error) {
-      return res.status(401).json({ error: error.message });
+    if (error || !data.session) {
+      return res.status(401).json({ error: error?.message as string || "No active session" });
     }
 
-    if (!data.session) {
-      return res.status(401).json({ error: "No active session" });
-    }
+ 
 
     return res.json({
       user: data.session.user,
       session: data.session,
     });
   } catch (error) {
-    console.error("Get session error:", error);
     return res.status(500).json({ error: "Failed to get session" });
   }
 };

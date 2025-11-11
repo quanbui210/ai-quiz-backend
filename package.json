@@ -14,8 +14,10 @@
     "test:coverage": "jest --coverage",
     "test:unit": "jest --testPathPattern=__tests__",
     "test:integration": "jest --testPathPattern=integration",
-    "prisma:generate": "npx prisma generate --schema=./src/prisma/schema.prisma --dotenv-config-path=./.env",
-    "prisma:migrate": "npx prisma migrate dev --schema=./src/prisma/schema.prisma --dotenv-config-path=./.env"
+    "prisma:generate": "npx prisma generate --schema=./src/prisma/schema.prisma",
+    "prisma:migrate": "npx prisma migrate dev --schema=./src/prisma/schema.prisma",
+    "prisma:migrate:deploy": "npx prisma migrate deploy --schema=./src/prisma/schema.prisma",
+    "prisma:push": "npx prisma db push --schema=./src/prisma/schema.prisma"
   },
   "author": "",
   "license": "ISC",

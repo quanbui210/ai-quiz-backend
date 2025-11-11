@@ -1,6 +1,6 @@
 import request from 'supertest';
 import express from 'express';
-import quizRoutes from '../../modules/quiz/quiz.route';
+import quizRoutes from '../quiz.route';
 
 jest.mock('openai', () => {
   return jest.fn().mockImplementation(() => ({
@@ -11,30 +11,30 @@ jest.mock('openai', () => {
             {
               message: {
                 content: `- Title: Test Quiz
-- Questions:
-1. What is 2 + 2?
-2. What is 3 + 3?
-3. What is 4 + 4?
-- Options:
-1. 2
-2. 3
-3. 4
-4. 5
-5. 4
-6. 5
-7. 6
-8. 7
-9. 6
-10. 7
-11. 8
-12. 9
-- Correct Answers:
-1. 4
-2. 6
-3. 8
-- Explanation: Basic math quiz
-- Difficulty: INTERMEDIATE
-- Topic: JavaScript`,
+                  - Questions:
+                  1. What is 2 + 2?
+                  2. What is 3 + 3?
+                  3. What is 4 + 4?
+                  - Options:
+                  1. 2
+                  2. 3
+                  3. 4
+                  4. 5
+                  5. 4
+                  6. 5
+                  7. 6
+                  8. 7
+                  9. 6
+                  10. 7
+                  11. 8
+                  12. 9
+                  - Correct Answers:
+                  1. 4
+                  2. 6
+                  3. 8
+                  - Explanation: Basic math quiz
+                  - Difficulty: INTERMEDIATE
+                  - Topic: JavaScript`,
               },
             },
           ],
@@ -82,7 +82,7 @@ jest.mock('../../utils/prisma', () => ({
   },
 }));
 
-import prisma from '../../utils/prisma';
+import prisma from '../../../utils/prisma';
 
 const app = express();
 app.use(express.json());

@@ -18,10 +18,17 @@ router.get("/login", loginWithGoogle);
 
 /**
  * @route   GET /api/auth/callback
- * @desc    Handle OAuth callback from Google
+ * @desc    Handle OAuth callback from Google (PKCE flow with code)
  * @access  Public
  */
 router.get("/callback", handleCallback);
+
+/**
+ * @route   POST /api/auth/callback
+ * @desc    Handle OAuth callback with tokens from HTML page
+ * @access  Public
+ */
+router.post("/callback", handleCallback);
 
 /**
  * @route   GET /api/auth/session

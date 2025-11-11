@@ -1,0 +1,72 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>OAuth Callback</title>
+</head>
+<body>
+    <div id="status">Processing authentication...</div>
+    <script>
+        // Extract tokens from URL hash
+        const hash = window.location.hash.substring(1);
+        const params = new URLSearchParams(hash);
+        
+        const accessToken = params.get('access_token');
+        const refreshToken = params.get('refresh_token');
+        const error = params.get('error');
+        const errorDescription = params.get('error_description');
+        
+        const backendUrl = window.location.origin;
+        
+        if (error) {
+            document.getElementById('status').textContent = `Error: ${error} - ${errorDescription || ''}`;
+            console.error('OAuth error:', error, errorDescription);
+        } else if (accessToken) {
+            // Send tokens to backend callback endpoint
+            fetch(`${backendUrl}/api/v1/auth/callback`, {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json',
+                },
+                body: JSON.stringify({
+                    access_token: accessToken,
+                    refresh_token: refreshToken,
+                    expires_at: params.get('expires_at'),
+                    expires_in: params.get('expires_in'),
+                    token_type: params.get('token_type'),
+                    provider_token: params.get('provider_token'),
+                    provider_refresh_token: params.get('provider_refresh_token'),
+                }),
+            })
+            .then(response => response.json())
+            .then(data => {
+                if (data.error) {
+                    document.getElementById('status').textContent = `Error: ${data.error}`;
+                    console.error('Backend error:', data);
+                } else {
+                    document.getElementById('status').textContent = 'Authentication successful! Redirecting...';
+                    console.log('Success:', data);
+                    // Store session info if needed
+                    if (data.session) {
+                        // You can store tokens in localStorage or cookies here
+                        localStorage.setItem('supabase_session', JSON.stringify(data.session));
+                    }
+                    // Redirect to your app or show success
+                    setTimeout(() => {
+                        window.location.href = '/';
+                    }, 2000);
+                }
+            })
+            .catch(error => {
+                document.getElementById('status').textContent = `Error: ${error.message}`;
+                console.error('Fetch error:', error);
+            });
+        } else {
+            document.getElementById('status').textContent = 'No access token found in URL';
+            console.error('No tokens found in hash');
+        }
+    </script>
+</body>
+</html>
+
