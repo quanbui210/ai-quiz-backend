@@ -44,8 +44,7 @@ jest.mock('openai', () => {
   }));
 });
 
-// Mock Prisma - define inline to avoid hoisting issues
-jest.mock('../../utils/prisma', () => ({
+jest.mock('../../../utils/prisma', () => ({
   __esModule: true,
   default: {
     quiz: {

@@ -48,6 +48,7 @@ describe('Auth Controller', () => {
         provider: 'google',
         options: {
           redirectTo: expect.any(String),
+          skipBrowserRedirect: false,
           queryParams: {
             access_type: 'offline',
             prompt: 'consent',
