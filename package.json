@@ -10,6 +10,10 @@
     "lint:fix": "eslint . --fix",
     "format": "prettier --write .",
     "test": "jest",
+    "test:watch": "jest --watch",
+    "test:coverage": "jest --coverage",
+    "test:unit": "jest --testPathPattern=__tests__",
+    "test:integration": "jest --testPathPattern=integration",
     "prisma:generate": "npx prisma generate --schema=./src/prisma/schema.prisma --dotenv-config-path=./.env",
     "prisma:migrate": "npx prisma migrate dev --schema=./src/prisma/schema.prisma --dotenv-config-path=./.env"
   },

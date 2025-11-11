@@ -1,5 +1,5 @@
 import { Router } from "express";
-import { createTopic, suggestTopic } from "./topic.controller";
+import { createTopic, suggestTopic, validateTopic } from "./topic.controller";
 
 const router = Router();
 
@@ -9,6 +9,19 @@ const router = Router();
  * @access  Private
  */
 router.post("/suggest", suggestTopic);
+
+/**
+ * @route   POST /api/topic/validate
+ * @desc    Validate a topic
+ * @access  Private
+ */
+router.post("/validate", validateTopic);
+
+/**
+ * @route   POST /api/topic/create
+ * @desc    Create a topic
+ * @access  Private
+ */
 router.post("/create", createTopic);
 
 export default router;

@@ -85,7 +85,9 @@ function parseQuizResponse(quizText: string): ParsedQuiz | null {
       ? correctAnswersText
           .split(/\d+\./)
           .map((line) => line.trim())
-          .filter((line) => line.length > 0 && !line.match(/^Correct Answers?:/i))
+          .filter(
+            (line) => line.length > 0 && !line.match(/^Correct Answers?:/i),
+          )
       : [];
 
     const allOptions = optionLines.filter((opt) => opt.length > 0);
@@ -147,29 +149,28 @@ export const testCreateQuiz = async (req: Request, res: Response) => {
       {
         role: "system",
         content: `You are a quiz creator assistant. Create a ${difficulty} level quiz with ${questionCount} questions about "${topic}".
+        Return the quiz in this EXACT format:
+        - Title: [Quiz Title]
+        - Questions:
+        1. [Question 1]
+        2. [Question 2]
+        ...
+        - Options:
+        1. [Option A for Q1]
+        2. [Option B for Q1]
+        3. [Option C for Q1]
+        4. [Option D for Q1]
+        5. [Option A for Q2]
+        ... (continue for all questions)
+        - Correct Answers:
+        1. [Correct answer for Q1 - must match one of the options exactly]
+        2. [Correct answer for Q2]
+        ...
+        - Explanation: [General explanation about the topic]
+        - Difficulty: ${difficulty}
+        - Topic: ${topic}
 
-Return the quiz in this EXACT format:
-- Title: [Quiz Title]
-- Questions:
-1. [Question 1]
-2. [Question 2]
-...
-- Options:
-1. [Option A for Q1]
-2. [Option B for Q1]
-3. [Option C for Q1]
-4. [Option D for Q1]
-5. [Option A for Q2]
-... (continue for all questions)
-- Correct Answers:
-1. [Correct answer for Q1 - must match one of the options exactly]
-2. [Correct answer for Q2]
-...
-- Explanation: [General explanation about the topic]
-- Difficulty: ${difficulty}
-- Topic: ${topic}
-
-IMPORTANT: Each question must have exactly 4 options. The correct answer must exactly match one of the options.`,
+        IMPORTANT: Each question must have exactly 4 options. The correct answer must exactly match one of the options.`,
       },
       {
         role: "user",
@@ -211,23 +212,19 @@ export const createQuiz = async (req: Request, res: Response) => {
         .json({ error: "topic is required and must be a non-empty string" });
     }
     if (!difficulty || !Object.values(Difficulty).includes(difficulty)) {
-      return res
-        .status(400)
-        .json({
-          error:
-            "difficulty is required and must be BEGINNER, INTERMEDIATE, or ADVANCED",
-        });
+      return res.status(400).json({
+        error:
+          "difficulty is required and must be BEGINNER, INTERMEDIATE, or ADVANCED",
+      });
     }
     if (
       !questionCount ||
       typeof questionCount !== "number" ||
       questionCount <= 0
     ) {
-      return res
-        .status(400)
-        .json({
-          error: "questionCount is required and must be a positive number",
-        });
+      return res.status(400).json({
+        error: "questionCount is required and must be a positive number",
+      });
     }
     if (!topicId || typeof topicId !== "string") {
       return res.status(400).json({ error: "topicId is required" });
@@ -248,28 +245,28 @@ export const createQuiz = async (req: Request, res: Response) => {
           role: "system",
           content: `You are a quiz creator assistant. Create a ${difficulty} level quiz with ${questionCount} questions about "${topic}".
 
-Return the quiz in this EXACT format:
-- Title: [Quiz Title]
-- Questions:
-  1. [Question 1]
-  2. [Question 2]
-  ...
-- Options:
-  1. [Option A for Q1]
-  2. [Option B for Q1]
-  3. [Option C for Q1]
-  4. [Option D for Q1]
-  5. [Option A for Q2]
-  ... (continue for all questions)
-- Correct Answers:
-  1. [Correct answer for Q1 - must match one of the options exactly]
-  2. [Correct answer for Q2]
-  ...
-- Explanation: [General explanation about the topic]
-- Difficulty: ${difficulty}
-- Topic: ${topic}
+            Return the quiz in this EXACT format:
+            - Title: [Quiz Title]
+            - Questions:
+              1. [Question 1]
+              2. [Question 2]
+              ...
+            - Options:
+              1. [Option A for Q1]
+              2. [Option B for Q1]
+              3. [Option C for Q1]
+              4. [Option D for Q1]
+              5. [Option A for Q2]
+              ... (continue for all questions)
+            - Correct Answers:
+              1. [Correct answer for Q1 - must match one of the options exactly]
+              2. [Correct answer for Q2]
+              ...
+            - Explanation: [General explanation about the topic]
+            - Difficulty: ${difficulty}
+            - Topic: ${topic}
 
-IMPORTANT: Each question must have exactly 4 options. The correct answer must exactly match one of the options.`,
+            IMPORTANT: Each question must have exactly 4 options. The correct answer must exactly match one of the options.`,
         },
         {
           role: "user",
@@ -471,7 +468,7 @@ export const submitAnswers = async (req: Request, res: Response) => {
     return res.json({
       quizId: quiz.id,
       quizTitle: quiz.title,
-      score: Math.round(score * 100) / 100, 
+      score: Math.round(score * 100) / 100,
       correctCount,
       totalQuestions,
       results,
